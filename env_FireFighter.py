@@ -81,6 +81,7 @@ class EnvFireFighter(object):
         self.firelevel = []
         for i in range(self.house_num):
             self.firelevel.append(3)
+        return self.firelevel
 
     def how_many_fighters(self, index, target_list):
         num = 0
@@ -113,23 +114,59 @@ class EnvFireFighter(object):
                 temp[1] = 1
             obs.append(temp)
         return obs
+
     def print_firelevel(self):
         print("The fire level of houses are" + str(self.firelevel))
+
+    # generating random policy
+    def random_action(self):
+        target_list = []
+        for fire_fighter in range(num_houses - 1):
+            action = np.random.randint(2)
+            target_list.append(action)
+        return target_list
+
+    # policies by Frank, not helped a lot
+    def select_houses_on_fire(self):
+        target_list = []
+        observation = self.get_obs()
+        observation_individual = []
+        for fire_fighter in range(num_houses - 1):
+            # each firefighter can only observe the houses beside it
+            observation_individual = observation[fire_fighter]
+            print(observation_individual)
+            if observation_individual[0] == 1 and observation_individual[1] == 0:
+                target_list.append(0)
+            elif observation_individual[0] == 0 and observation_individual[1] == 1:
+                target_list.append(1)
+            else:
+                if fire_fighter == 0:
+                    if random.random() < 0.025:
+                        target_list.append(1)
+                    else:
+                        target_list.append(0)
+                elif fire_fighter == num_houses - 2:
+                    if random.random() < 0.025:
+                        target_list.append(0)
+                    else:
+                        target_list.append(1)
+                else:
+                    target_list.append(np.random.randint(2))
+        return target_list
+
+
 
 if __name__ == "__main__":
 
 
     # test by Frank Liu
-    num_houses = 8
+    num_houses = 4
     env = EnvFireFighter(num_houses)
-    target_list = []
 
     print(env.get_obs())
-    for i in range(1000):
-        target_list = []
-        for fire_fighter in range(num_houses - 1):
-            action = np.random.randint(2)
-            target_list.append(action)
+    for i in range(1):
+        target_list = env.random_action()
+        env.print_firelevel()
         print("action taken: " + str(target_list))
         print("reward: " + str(env.step(target_list)))
         env.print_firelevel()

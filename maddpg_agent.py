@@ -20,6 +20,8 @@ class MADDPG():
 
         self.nb_actions = nb_actions
 
+        #Placeholders, specified whenever we want to do a forward or backwards pass through the networks
+
         state_input = tf.placeholder(shape=[None, nb_input], dtype=tf.float32)
 
         action_input = tf.placeholder(shape=[None, nb_actions], dtype=tf.float32)
@@ -30,7 +32,7 @@ class MADDPG():
 
 
 
-
+        #This function defines the feed-forward step of the actor. It takes in the state and the actions of other agents, and returns action probabilities
 
         def actor_network(name):
 
@@ -68,7 +70,7 @@ class MADDPG():
 
 
 
-
+        #This runs the feed-forward step for the critic network. It takes in the state and actions of the other agents, and returns a value for the state
 
         def critic_network(name, action_input, reuse=False):
 
@@ -110,7 +112,7 @@ class MADDPG():
 
 
 
-
+        #Calling sess.run on either of these outputs would return the output of the function
 
         self.action_output = actor_network(name + "actor")
 
@@ -127,7 +129,7 @@ class MADDPG():
         self.reward = reward
 
 
-
+        #These optimizer objects will handle the back-propagation
         self.actor_optimizer = tf.train.AdamOptimizer(1e-4)
 
         self.critic_optimizer = tf.train.AdamOptimizer(1e-3)
@@ -136,30 +138,33 @@ class MADDPG():
 
         # 最大化Q值
 
+        #Negative probability of taking the action that we took. We might need to change this to negative log probability
         self.actor_loss = -tf.reduce_mean(
 
             critic_network(name + '_critic', action_input=tf.concat([self.action_output, other_action_input], axis=1),
 
                            reuse=True))
 
+        #Back-propagation step
         self.actor_train = self.actor_optimizer.minimize(self.actor_loss)
 
 
-
+        #Target state value - this is the discounted reward
         self.target_Q = tf.placeholder(shape=[None, 1], dtype=tf.float32)
 
+        #Critic loss is mean squared error between the discounted reward and the critic output
         self.critic_loss = tf.reduce_mean(tf.square(self.target_Q - self.critic_output))
 
         self.critic_train = self.critic_optimizer.minimize(self.critic_loss)
 
 
-
+    #This runs the actor_train operation which will perform one train step on the actor network
     def train_actor(self, state, other_action, sess):
 
         sess.run(self.actor_train, {self.state_input: state, self.other_action_input: other_action})
 
 
-
+    #Runs critic_train operation which will perform one train step on critic network
     def train_critic(self, state, action, other_action, target, sess):
 
         sess.run(self.critic_train,
@@ -169,13 +174,13 @@ class MADDPG():
                   self.target_Q: target})
 
 
-
+    #Runs action_output which will run a feed-forward step on the actor network
     def action(self, state, sess):
 
         return sess.run(self.action_output, {self.state_input: state})
 
 
-
+    #Runs critic_output which will run a feed-forward on the critic network
     def Q(self, state, action, other_action, sess):
 
         return sess.run(self.critic_output,

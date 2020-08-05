@@ -20,35 +20,32 @@ class EnvFireFighter(object):
             if self.firelevel[i] > 0:
                 if self.is_neighbour_on_fire(i):
                     if self.how_many_fighters(i, target_list) == 0:
-                        if random.random() < 0.8:
-                            self.firelevel[i] = self.firelevel[i] + 1
+                        if random.random() < 0.5:
+                            self.firelevel[i] = self.firelevel[i] + 5
+                        self.firelevel[i] = self.firelevel[i] + 5
                     elif self.how_many_fighters(i, target_list) == 1:
-                        if random.random() < 0.8:
-                            self.firelevel[i] = self.firelevel[i] + 1
-                        if random.random() < 0.6:
-                            self.firelevel[i] = self.firelevel[i] - 1
+                        if random.random() < 0.5:
+                            self.firelevel[i] = self.firelevel[i] + 5
+                        self.firelevel[i] = self.firelevel[i] // 2 # floor division
                     else:
                         self.firelevel[i] = 0
                 else:
                     if self.how_many_fighters(i, target_list) == 0:
-                        if random.random() < 0.4:
-                            self.firelevel[i] = self.firelevel[i] + 1
+                        self.firelevel[i] = self.firelevel[i] + 5
                     elif self.how_many_fighters(i, target_list) == 1:
-                        if random.random() < 0.4:
-                            self.firelevel[i] = self.firelevel[i] + 1
-                        self.firelevel[i] = self.firelevel[i] - 1
+                        self.firelevel[i] = self.firelevel[i] // 2
                     else:
                         self.firelevel[i] = 0
             else:   # no fire
                 if self.is_neighbour_on_fire(i):
                     if self.how_many_fighters(i, target_list) == 0:
-                        if random.random() < 0.8:
-                            self.firelevel[i] = self.firelevel[i] + 1
-                    elif self.how_many_fighters(i, target_list) == 1:
-                        if random.random() < 0.8:
-                            self.firelevel[i] = self.firelevel[i] + 1
                         if random.random() < 0.6:
-                            self.firelevel[i] = self.firelevel[i] - 1
+                            self.firelevel[i] = self.firelevel[i] + 5
+                        self.firelevel[i] = self.firelevel[i] + 5
+                    elif self.how_many_fighters(i, target_list) == 1:
+                        if random.random() < 0.6:
+                            self.firelevel[i] = self.firelevel[i] + 5
+                        self.firelevel[i] = self.firelevel[i] // 2 # floor division
                     else:
                         self.firelevel[i] = 0
                 else:

@@ -10,7 +10,7 @@ import tensorflow.contrib as tc
 
 
 
-class MADDPG():
+class MADDPG:
 
     def __init__(self, name, layer_norm=True, nb_actions=2, nb_input=1, nb_other_aciton=2):
 
@@ -114,7 +114,7 @@ class MADDPG():
 
         #Calling sess.run on either of these outputs would return the output of the function
 
-        self.action_output = actor_network(name + "actor")
+        self.action_output = actor_network(name + "_actor")
 
         self.critic_output = critic_network(name + '_critic',
 
@@ -156,6 +156,21 @@ class MADDPG():
         self.critic_loss = tf.reduce_mean(tf.square(self.target_Q - self.critic_output))
 
         self.critic_train = self.critic_optimizer.minimize(self.critic_loss)
+
+        actor_scope = name + "_actor"
+        critic_scope = name + "_critic"
+        self.actor_saver = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=actor_scope), max_to_keep=10)
+        self.critic_saver = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=critic_scope), max_to_keep=10)
+
+
+
+    def load_weights(self, name, sess):
+        self.actor_saver.restore(sess, name + "_actor")
+        self.critic_saver.restore(sess, name + "_critic")
+
+    def save_weights(self, name, sess, episode=None):
+        self.actor_saver.save(sess, name + "_actor", global_step=episode)
+        self.critic_saver.save(sess, name + "_critic", global_step=episode)
 
 
     #This runs the actor_train operation which will perform one train step on the actor network

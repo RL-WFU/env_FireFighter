@@ -115,11 +115,28 @@ def train_agent(agent_ddpg, agent_ddpg_target, agent_memory, agent_actor_target_
 
     sess.run([agent_actor_target_update, agent_critic_target_update])
 
+def load_weights(a1, a1_tar, a2, a2_tar, name1, name2, session):
+    a1.load_weights(name1 + "_online", session)
+    a1_tar.load_weights(name1 + "_target", session)
+    a2.load_weights(name2 + "_online", session)
+    a2_tar.load_weights(name2 + "_target", session)
 
-
-
+def save_weights(a1, a1_tar, a2, a2_tar, name1, name2, session, episode=None):
+    a1.save_weights(name1 + "_online", session, episode)
+    a1_tar.save_weights(name1 + "_target", session, episode)
+    a2.save_weights(name2 + "_online", session, episode)
+    a2_tar.save_weights(name2 + "_target", session, episode)
 
 if __name__ == '__main__':
+    """
+    Weights will save to Weights_save. After training, pick which episode
+    you would like to retrieve the weights from. Sort the files in that directory by
+    date modified, and then select all the weights with the ending corresponding to the episode.
+    This should be around 24 files.
+    Move those weights to Weights_final, and delete the ending from all the files (tedious I know).
+    Weights might look like "weightname-1800.data", delete just the "-1800" part. Then, turn testing
+    to true.
+    """
 
     save_dir = "saves"
     if not os.path.exists(save_dir):
@@ -140,7 +157,7 @@ if __name__ == '__main__':
 
     agent2_ddpg_target = MADDPG('agent2_target')
 
-    saver = tf.train.Saver()
+    #saver = tf.train.Saver()
 
     agent1_actor_target_init, agent1_actor_target_update = create_init_update('agent1_actor', 'agent1_target_actor')
 
@@ -170,8 +187,23 @@ if __name__ == '__main__':
 
               agent2_actor_target_init, agent2_critic_target_init])
 
+    save_weight_dir = "Weights_save"
+    load_weight_dir = "Weights_final"
+    if not os.path.exists(save_weight_dir):
+        os.makedirs(save_weight_dir)
 
-    num_episodes = 10000
+    if not os.path.exists(load_weight_dir):
+        os.makedirs(load_weight_dir)
+
+
+    weights_fname = load_weight_dir + "/weights"
+    testing = False
+    if testing:
+        load_weights(agent1_ddpg, agent1_ddpg_target, agent2_ddpg, agent2_ddpg_target, weights_fname + "_1", weights_fname + "_2", sess)
+
+    weights_fname = save_weight_dir + "/weights"
+
+    num_episodes = 2000
 
     rewards = []
     average_over = int(num_episodes / 10)
@@ -250,7 +282,7 @@ if __name__ == '__main__':
 
 
             # original is 50000
-            if t > batch_size:
+            if t > batch_size and not testing:
 
                 # e *= 0.9999
 
@@ -300,7 +332,9 @@ if __name__ == '__main__':
             plt.savefig(save_dir + "/moving_avg.png")
             plt.clf()
 
+            save_weights(agent1_ddpg, agent1_ddpg_target, agent2_ddpg, agent2_ddpg_target, weights_fname + "_1",
+                         weights_fname + "_2", sess, i)
+
+
 
     sess.close()
-
-

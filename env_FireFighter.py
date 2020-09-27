@@ -59,7 +59,7 @@ class EnvFireFighter(object):
         reward = 0
         for i in range(self.house_num):
             reward = reward - self.firelevel[i]
-        return reward
+        return reward, self.firelevel
 
     def is_neighbour_on_fire(self, index):
         is_on = False
@@ -75,9 +75,9 @@ class EnvFireFighter(object):
         return is_on
 
     def reset(self):
-        self.firelevel = []
+        self.firelevel = np.empty(self.house_num)
         for i in range(self.house_num):
-            self.firelevel.append(3)
+            self.firelevel[i] = 3
         return self.firelevel
 
     def how_many_fighters(self, index, target_list):
@@ -168,6 +168,7 @@ if __name__ == "__main__":
         print("reward: " + str(env.step(target_list)))
         env.print_firelevel()
         print("action level seen by agents are: " + str(env.get_obs()) + "\n")
+        print(env.reset())
 
 
     # FIXME: it's almost always the case that middle houses are taken care of much more

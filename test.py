@@ -12,6 +12,7 @@ from replay_buffer import ReplayBuffer
 import matplotlib.pyplot as plt
 from collections import deque
 import os
+import copy
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
@@ -50,18 +51,23 @@ def get_agents_action(obs, sess, noise_rate=0):
 
     # debugged here
     obs = np.asarray(obs)
-    o_1 = np.expand_dims(np.expand_dims(obs[0],axis=0),axis=0)
-    o_2 = np.expand_dims(np.expand_dims(obs[1],axis=0),axis=0)
+
+    o_1 = np.expand_dims(obs,axis=0)
+    o_2 = np.expand_dims(obs,axis=0)
+
+    # o_3 = np.expand_dims(obs,axis=0)
 
     act1 = agent1_ddpg.action(state=o_1, sess=sess)
 
     act2 = agent2_ddpg.action(state=o_2, sess=sess)
 
+    # 3
+    # act3 = agent3_ddpg.action(state=o_3, sess=sess)
 
     return act1, act2
 
 
-def train_agent(agent_ddpg, agent_ddpg_target, agent_memory, agent_actor_target_update, agent_critic_target_update, sess, other_actors, num_agents=2):
+def train_agent(agent_ddpg, agent_ddpg_target, agent_memory, agent_actor_target_update, agent_critic_target_update, sess, other_actors, num_agents=3):
     """
     This is an important function, which runs a single train step for a single agent.
     :param agent_ddpg: The online part of agent which we will be training. This is the object which represents the deep network that we choose actions from
@@ -157,6 +163,11 @@ if __name__ == '__main__':
 
     agent2_ddpg_target = MADDPG('agent2_target')
 
+    #3
+    # agent3_ddpg = MADDPG('agent3')
+
+    # agent3_ddpg_target = MADDPG('agent3_target')
+
     #saver = tf.train.Saver()
 
     agent1_actor_target_init, agent1_actor_target_update = create_init_update('agent1_actor', 'agent1_target_actor')
@@ -167,8 +178,15 @@ if __name__ == '__main__':
 
     agent2_critic_target_init, agent2_critic_target_update = create_init_update('agent2_critic', 'agent2_target_critic')
 
+    # 3
+
+    # agent3_actor_target_init, agent3_actor_target_update = create_init_update('agent3_actor', 'agent3_target_actor')
+
+    # agent3_critic_target_init, agent3_critic_target_update = create_init_update('agent3_critic', 'agent3_target_critic')
+
 
     # four houses and three agents
+    # 3
     num_houses = 3
     env = EnvFireFighter(num_houses)
 
@@ -183,6 +201,7 @@ if __name__ == '__main__':
 
     sess.run(tf.global_variables_initializer())
 
+    # 3
     sess.run([agent1_actor_target_init, agent1_critic_target_init,
 
               agent2_actor_target_init, agent2_critic_target_init])
@@ -197,6 +216,7 @@ if __name__ == '__main__':
 
 
     weights_fname = load_weight_dir + "/weights"
+    # 3
     testing = False
     if testing:
         load_weights(agent1_ddpg, agent1_ddpg_target, agent2_ddpg, agent2_ddpg_target, weights_fname + "_1", weights_fname + "_2", sess)
@@ -218,6 +238,9 @@ if __name__ == '__main__':
 
     agent2_memory = ReplayBuffer(2000)
 
+    #3
+    # agent3_memory = ReplayBuffer(2000)
+
 
 
 
@@ -231,6 +254,9 @@ if __name__ == '__main__':
 
     num_steps = 200
 
+    transition = []
+    file = open("transition.txt","w")
+
 
     for i in range(num_episodes):
     # make graph with reward
@@ -238,12 +264,15 @@ if __name__ == '__main__':
         #Reset the environment at the start of each episode
         o_n = env.reset()
 
+        print(str(o_n))
+
         total_ep_reward = 0
 
         for t in range(num_steps):
 
-
+            # o_n = env.firelevel
             #Get action probabilities at each timestep
+            # 3
             agent1_action, agent2_action = get_agents_action(o_n, sess, noise_rate=0.2)
 
 
@@ -251,17 +280,25 @@ if __name__ == '__main__':
             #三个agent的行动
             agent1_action = np.squeeze(agent1_action)
             agent2_action = np.squeeze(agent2_action)
+            # agent3_action = np.squeeze(agent3_action)
 
             #Sample from probabilities
             action1 = np.random.choice(np.arange(len(agent1_action)), p=agent1_action)
             action2 = np.random.choice(np.arange(len(agent2_action)), p=agent2_action)
+            # action3 = np.random.choice(np.arange(len(agent3_action)), p=agent3_action)
 
+            # if (num_steps % 10 ==0):
+            #    action1 = np.random.randint(0,2);
+
+            # 3
             a = [action1, action2]
+            print("debug" + str(a))
             #print("action of agent is " + str(a))
             # global reward as the reward for each agent
 
             #Get global reward
-            glob_reward = env.step(a)
+            glob_reward, o_n_next = env.step(a)
+            # 3
             r_n = [glob_reward for _ in range(2)]
 
 
@@ -269,16 +306,20 @@ if __name__ == '__main__':
 
             #print("reward is " + str(r_n))
             #Get next state
-            o_n_next = env.firelevel
+
+            # transition.append((o_n,action1,action2,o_n_next))
+            # print(str(o_n) + " action " + str(o_n_next))
+            file.write(str((o_n,action1,action2,o_n_next)) + "\n")
+
 
             #Add to agents' memories the state, actions, reward, next state, done tuples
-            agent1_memory.add(np.vstack([o_n[0], o_n[1]]), np.vstack([agent1_action, agent2_action]), r_n[0], np.vstack([o_n_next[0], o_n_next[1]]), False)
+            # 3
+            agent1_memory.add(np.vstack([o_n, o_n]), np.vstack([agent1_action, agent2_action]), r_n[0], np.vstack([o_n_next, o_n_next]), False)
 
+            agent2_memory.add(np.vstack([o_n, o_n]), np.vstack([agent2_action,agent1_action]), r_n[1], np.vstack([o_n_next, o_n_next]), False)
 
-
-            agent2_memory.add(np.vstack([o_n[1], o_n[2], o_n[0]]), np.vstack([agent2_action,agent1_action]), r_n[1], np.vstack([o_n_next[1], o_n_next[0]]), False)
-
-
+            #agent3_memory.add(np.vstack([o_n, o_n, o_n]), np.vstack([agent3_action, agent1_action, agent2_action]), r_n[2],
+                              # np.vstack([o_n_next, o_n_next, o_n_next]), False)
 
 
             # original is 50000
@@ -289,6 +330,7 @@ if __name__ == '__main__':
                 # agent1 train
 
                 #Run a single train step for each agent
+                # 3
                 train_agent(agent1_ddpg, agent1_ddpg_target, agent1_memory, agent1_actor_target_update,
 
                             agent1_critic_target_update, sess, [agent2_ddpg_target])
@@ -300,11 +342,19 @@ if __name__ == '__main__':
                             agent2_critic_target_update, sess, [agent1_ddpg_target])
 
 
+                # train_agent(agent3_ddpg, agent3_ddpg_target, agent3_memory, agent3_actor_target_update,
+
+                           # agent3_critic_target_update, sess, [agent1_ddpg_target, agent2_ddpg_target])
+
+
                 #print("step " + str(t))
                 #print("observation by agents are  " + str(env.get_obs()) + "\n\n")
                 #print("fire level at step " + str(t) + " is " + str(env.firelevel))
 
-            o_n = o_n_next
+            o_n = copy.copy(o_n_next)
+
+
+        print(str(o_n))
 
         print("Episode: {}. Global Reward: {}.".format(i+1, total_ep_reward))
         rewards.append(total_ep_reward)
@@ -336,5 +386,5 @@ if __name__ == '__main__':
                          weights_fname + "_2", sess, i)
 
 
-
+    file.close()
     sess.close()

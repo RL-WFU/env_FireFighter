@@ -67,7 +67,7 @@ def get_agents_action(obs, sess, noise_rate=0):
     return act1, act2
 
 
-def train_agent(agent_ddpg, agent_ddpg_target, agent_memory, agent_actor_target_update, agent_critic_target_update, sess, other_actors, num_agents=3):
+def train_agent(agent_ddpg, agent_ddpg_target, agent_memory, agent_actor_target_update, agent_critic_target_update, sess, other_actors, num_agents=2):
     """
     This is an important function, which runs a single train step for a single agent.
     :param agent_ddpg: The online part of agent which we will be training. This is the object which represents the deep network that we choose actions from
@@ -186,8 +186,8 @@ if __name__ == '__main__':
 
 
     # four houses and three agents
-    # 3
-    num_houses = 3
+    # 4,2
+    num_houses = 4
     env = EnvFireFighter(num_houses)
 
     #o_n = env.get_obs()
@@ -234,9 +234,9 @@ if __name__ == '__main__':
 
 
 
-    agent1_memory = ReplayBuffer(2000) #This was at 100
+    agent1_memory = ReplayBuffer(500) #This was at 100
 
-    agent2_memory = ReplayBuffer(2000)
+    agent2_memory = ReplayBuffer(500)
 
     #3
     # agent3_memory = ReplayBuffer(2000)
@@ -247,7 +247,7 @@ if __name__ == '__main__':
     # e = 1
 
 
-
+# fixme playing around with hyperparameters
 
 
     batch_size = 32
@@ -274,7 +274,7 @@ if __name__ == '__main__':
             #Get action probabilities at each timestep
             # 3
             agent1_action, agent2_action = get_agents_action(o_n, sess, noise_rate=0.2)
-
+            # print("action1 and action2 is " + str(agent1_action) + " " + str(agent2_action))
 
 
             #三个agent的行动
@@ -292,15 +292,18 @@ if __name__ == '__main__':
 
             # 3
             a = [action1, action2]
+
             print("debug" + str(a))
             #print("action of agent is " + str(a))
             # global reward as the reward for each agent
 
             #Get global reward
-            glob_reward, o_n_next = env.step(a)
+            glob_reward, reward_1, reward_2, o_n_next = env.step(a)
             # 3
-            r_n = [glob_reward for _ in range(2)]
-
+            # hard code the reward function
+            # r_n = [glob_reward for _ in range(2)]
+            r_n = [reward_1, reward_2]
+            print("reward debug" + str(r_n))
 
             total_ep_reward += glob_reward
 

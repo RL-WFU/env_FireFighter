@@ -10,12 +10,13 @@ import random
 class EnvFireFighter(object):
     def __init__(self, house_num):
         self.house_num = house_num
-        self.fighter_num = self.house_num - 1
+        # 4,2
+        self.fighter_num = self.house_num - 2
         self.firelevel = []
         for i in range(self.house_num):
             self.firelevel.append(3)
 
-    def step(self, target_list):    # 0 left, 1 right
+    def step(self, target_list):    # 0 left, 1 middle, 2 right
         for i in range(self.house_num):
             if self.firelevel[i] > 0:
                 if self.is_neighbour_on_fire(i):
@@ -57,9 +58,14 @@ class EnvFireFighter(object):
                         self.firelevel[i] = 0
         self.regulate_fire()
         reward = 0
+        reward_agent_1 = 0
+        reward_agent_2 = 0
         for i in range(self.house_num):
             reward = reward - self.firelevel[i]
-        return reward, self.firelevel
+        # hard coded for individual reward
+        reward_agent_1 = reward_agent_1 - self.firelevel[0] - self.firelevel[1] - self.firelevel[2]
+        reward_agent_2 = reward_agent_2 - self.firelevel[1] - self.firelevel[2] - self.firelevel[3]
+        return reward, reward_agent_1, reward_agent_2, self.firelevel
 
     def is_neighbour_on_fire(self, index):
         is_on = False
@@ -80,15 +86,30 @@ class EnvFireFighter(object):
             self.firelevel[i] = 3
         return self.firelevel
 
+    # 4,2
     def how_many_fighters(self, index, target_list):
         num = 0
         if index == 0:
             if target_list[0] == 0:
                 num = num + 1
-        elif index == self.house_num - 1:
+        elif index == 1:
+            if target_list[0] == 1:
+                num = num + 1
+            if target_list[1] == 0:
+                num = num + 1
+        # 倒数第二个
+        elif index == self.house_num - 2:
             if target_list[index - 1] == 1:
                 num = num + 1
-        else:
+            if target_list[index - 2] == 2:
+                num = num + 1
+        # last house
+        elif index == self.house_num - 1:
+            if target_list[index - 2] == 2:
+                num = num + 1
+        else: # the middle house could have three potential firefighters can take care of
+            if target_list[index - 2] == 2:
+                num = num + 1
             if target_list[index - 1] == 1:
                 num = num + 1
             if target_list[index] == 0:

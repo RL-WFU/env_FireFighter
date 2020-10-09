@@ -11,8 +11,8 @@ import tensorflow.contrib as tc
 
 
 class MADDPG:
-    # 3
-    def __init__(self, name, layer_norm=True, nb_actions=2, nb_input = 3, nb_other_aciton = 2):
+    # 4,2
+    def __init__(self, name, layer_norm=True, nb_actions=3, nb_input = 4, nb_other_aciton = 3):
 
         gamma = 0.999
 
